@@ -1,0 +1,563 @@
+{% extends "base.html" %}
+{% block title %}Book Appointment - VeinLine{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row">
+    <div class="col-lg-8 mx-auto">
+      <h1 class="display-5 fw-bold mb-2">📅 Book a Donation Appointment</h1>
+      <p class="lead text-muted mb-5">Find a convenient time and location to donate blood</p>
+
+      <!-- Filters -->
+      <div class="card mb-4 border-0 shadow-sm">
+        <div class="card-body">
+          <h6 class="card-title mb-3">Search Slots</h6>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">City</label>
+              <input type="text" id="cityFilter" class="form-control" placeholder="e.g. Delhi, Noida, Lucknow">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Date From</label>
+              <input type="date" id="dateFilter" class="form-control">
+            </div>
+          </div>
+          <div class="mt-3">
+            <button class="btn btn-danger" onclick="searchSlots()">Search Slots</button>
+            <button class="btn btn-outline-secondary" onclick="loadAllSlots()">Show All</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Available Slots -->
+      <div id="slotsContainer">
+        {% for slot in slots %}
+        <div class="card slot-card mb-3 {% if not slot.is_available_for_booking %}booked{% endif %}">
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-8">
+                <h6 class="card-title mb-2">{{ slot.blood_bank }}</h6>
+                <p class="mb-1"><strong>📍</strong> {{ slot.city }}{% if slot.address %}, {{ slot.address }}{% endif %}</p>
+                <p class="mb-1"><strong>📅</strong> {{ slot.date|date:"D, M j" }} • <strong>⏰</strong> {{ slot.start_time|time:"H:i" }} - {{ slot.end_time|time:"H:i" }}</p>
+                <p class="mb-0"><strong>👥</strong> {{ slot.remaining_slots }} of {{ slot.max_donors }} slots available</p>
+                {% if slot.notes %}<p class="text-muted small mt-2">{{ slot.notes }}</p>{% endif %}
+              </div>
+              <div class="col-md-4 text-end">
+                {% if slot.is_available_for_booking %}
+                <button class="btn btn-danger" onclick="openBookingModal({{ slot.id }}, '{{ slot.blood_bank|escapejs }}', '{{ slot.date|date:'Y-m-d' }}', '{{ slot.start_time|time:'H:i:s' }}')">Book Now</button>
+                {% else %}
+                <button class="btn btn-secondary disabled">Fully Booked</button>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+        {% empty %}
+        <div class="alert alert-info">No available slots found. Try different filters or click &quot;Show All&quot; to refresh.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- My Appointments -->
+  <div class="row mt-5">
+    <div class="col-lg-8 mx-auto">
+      <h3 class="fw-bold mb-4">My Appointments</h3>
+      <div id="myAppointments">
+        {% if is_authenticated %}
+          {% for apt in my_appointments %}
+          <div class="card appointment-card mb-3 {{ apt.status }}">
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-8">
+                  <h6 class="card-title">{{ apt.slot.blood_bank }}</h6>
+                  <p class="mb-1"><strong>📅</strong> {{ apt.slot.date|date:"D, M j" }} • <strong>⏰</strong> {{ apt.slot.start_time|time:"H:i" }}</p>
+                  <p class="mb-0"><strong>Status:</strong> <span class="badge bg-{% if apt.status == 'scheduled' %}warning{% elif apt.status == 'confirmed' %}info{% elif apt.status == 'completed' %}success{% elif apt.status == 'cancelled' %}danger{% else %}secondary{% endif %}">{{ apt.status }}</span></p>
+                </div>
+                <div class="col-md-4 text-end">
+                  {% if apt.status == 'scheduled' %}
+                  <button class="btn btn-sm btn-danger" onclick="confirmAppointment({{ apt.id }})">Confirm</button>
+                  <button class="btn btn-sm btn-outline-danger" onclick="cancelAppointment({{ apt.id }})">Cancel</button>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+          {% empty %}
+          <p class="text-muted">You haven't booked any appointments yet.</p>
+          {% endfor %}
+        {% else %}
+        <p class="text-info">Please <a href="/login/">log in</a> to view your appointments.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Booking Modal -->
+<div class="modal fade" id="bookingModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Confirm Booking</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="slotDetails"></div>
+        <div class="alert alert-info mt-3">
+          <strong>Before booking:</strong> You'll need to fill out a health questionnaire to confirm your eligibility.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" onclick="confirmBooking()">Confirm Booking</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Health Questionnaire Modal -->
+<div class="modal fade" id="healthModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Pre-Donation Health Screening Form</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+        <form id="healthForm">
+          <div class="alert alert-info mb-3">
+            <small><strong>Important:</strong> Please answer all questions honestly. Your responses are confidential and essential for donor and recipient safety.</small>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Body Weight <span class="text-danger">*</span> <span class="text-muted">(kg)</span></label>
+              <input type="number" class="form-control" id="weight_kg" min="50" step="0.1" placeholder="e.g., 70" required>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Hemoglobin Level <span class="text-muted">(g/dL)</span></label>
+              <input type="number" class="form-control" id="hemoglobin_level" min="7" max="20" step="0.1" placeholder="e.g., 14.5">
+            </div>
+          </div>
+
+          <h6 class="fw-bold mb-3 text-danger">General Health Screening</h6>
+          <div class="form-check mb-2">
+            <input class="form-check-input" type="checkbox" id="has_fever" name="has_fever">
+            <label class="form-check-label" for="has_fever">Do you currently have fever, chills, or body temperature above 37.5°C?</label>
+          </div>
+          <div class="form-check mb-2">
+            <input class="form-check-input" type="checkbox" id="has_cold_or_cough" name="has_cold_or_cough">
+            <label class="form-check-label" for="has_cold_or_cough">Are you experiencing symptoms of respiratory infection (cough, sore throat, nasal congestion)?</label>
+          </div>
+          <div class="form-check mb-2">
+            <input class="form-check-input" type="checkbox" id="has_heart_condition" name="has_heart_condition">
+            <label class="form-check-label" for="has_heart_condition">Have you been diagnosed with cardiovascular disease, heart murmur, or arrhythmia?</label>
+          </div>
+          <div class="form-check mb-2">
+            <input class="form-check-input" type="checkbox" id="has_high_blood_pressure" name="has_high_blood_pressure">
+            <label class="form-check-label" for="has_high_blood_pressure">Do you have chronic uncontrolled hypertension (systolic >180 mmHg or diastolic >110 mmHg)?</label>
+          </div>
+          <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" id="has_diabetes" name="has_diabetes">
+            <label class="form-check-label" for="has_diabetes">Do you have Type 1 or Type 2 diabetes requiring insulin treatment?</label>
+          </div>
+
+          <h6 class="fw-bold mb-3 text-danger">Infectious Disease Screening</h6>
+          <div class="form-check mb-2">
+            <input class="form-check-input" type="checkbox" id="has_hiv_or_aids" name="has_hiv_or_aids">
+            <label class="form-check-label" for="has_hiv_or_aids">Have you been diagnosed with HIV infection, AIDS, or exposed to HIV?</label>
+          </div>
+          <div class="form-check mb-2">
+            <input class="form-check-input" type="checkbox" id="has_hepatitis" name="has_hepatitis">
+            <label class="form-check-label" for="has_hepatitis">Have you been diagnosed with Hepatitis B, Hepatitis C, or other forms of hepatitis?</label>
+          </div>
+          <div class="form-check mb-2">
+            <input class="form-check-input" type="checkbox" id="has_cancer" name="has_cancer">
+            <label class="form-check-label" for="has_cancer">Have you been diagnosed with or treated for malignancy, lymphoma, or leukemia?</label>
+          </div>
+          <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" id="has_bleeding_disorder" name="has_bleeding_disorder">
+            <label class="form-check-label" for="has_bleeding_disorder">Have you been diagnosed with a bleeding disorder, hemophilia, or thrombocytopenia?</label>
+          </div>
+
+          <h6 class="fw-bold mb-3 text-danger">Recent Medical Procedures & Events</h6>
+          <div class="form-check mb-2">
+            <input class="form-check-input" type="checkbox" id="recent_surgery" name="recent_surgery">
+            <label class="form-check-label" for="recent_surgery">Have you undergone surgery, dental extraction, or invasive procedure within the last 6 months?</label>
+          </div>
+          <div class="form-check mb-2">
+            <input class="form-check-input" type="checkbox" id="recent_tattoo_or_piercing" name="recent_tattoo_or_piercing">
+            <label class="form-check-label" for="recent_tattoo_or_piercing">Have you received a tattoo, body piercing, or acupuncture within the last 12 months?</label>
+          </div>
+          <div class="form-check mb-2">
+            <input class="form-check-input" type="checkbox" id="recent_blood_transfusion" name="recent_blood_transfusion">
+            <label class="form-check-label" for="recent_blood_transfusion">Have you received a blood transfusion or blood product within the last 12 months?</label>
+          </div>
+          <div class="form-check mb-2">
+            <input class="form-check-input" type="checkbox" id="recent_vaccination" name="recent_vaccination">
+            <label class="form-check-label" for="recent_vaccination">Have you received live attenuated vaccine (MMR, varicella, yellow fever) within the last 4 weeks?</label>
+          </div>
+          <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" id="takes_antibiotics" name="takes_antibiotics">
+            <label class="form-check-label" for="takes_antibiotics">Are you currently taking antibiotics or antifungal medications?</label>
+          </div>
+
+          <h6 class="fw-bold mb-3 text-danger">Medication & Anticoagulation</h6>
+          <div class="form-check mb-2">
+            <input class="form-check-input" type="checkbox" id="takes_blood_thinners" name="takes_blood_thinners">
+            <label class="form-check-label" for="takes_blood_thinners">Are you taking anticoagulant therapy (Warfarin, DOACs) or high-dose antiplatelet agents?</label>
+          </div>
+          <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" id="has_high_blood_pressure" name="has_high_blood_pressure">
+            <label class="form-check-label" for="has_high_blood_pressure">Have you had any adverse reactions to medications or blood products previously?</label>
+          </div>
+
+          <h6 class="fw-bold mb-3 text-danger">Special Considerations</h6>
+          <div class="form-check mb-2">
+            <input class="form-check-input" type="checkbox" id="is_pregnant" name="is_pregnant">
+            <label class="form-check-label" for="is_pregnant">Are you currently pregnant or have you given birth within the last 6 months?</label>
+          </div>
+          <div class="form-check mb-2">
+            <input class="form-check-input" type="checkbox" id="is_breastfeeding" name="is_breastfeeding">
+            <label class="form-check-label" for="is_breastfeeding">Are you currently lactating or breastfeeding?</label>
+          </div>
+          <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" id="has_bleeding_disorder" name="has_bleeding_disorder">
+            <label class="form-check-label" for="has_bleeding_disorder">Do you have any history of fainting, syncope, or severe needle-related anxiety?</label>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Additional Medical Information <span class="text-muted">(optional)</span></label>
+            <textarea class="form-control" id="additional_notes" rows="3" placeholder="Include any relevant medical conditions, medications, or concerns not mentioned above. This information is confidential and used solely for health screening purposes."></textarea>
+          </div>
+
+          <div class="alert alert-warning mt-3 mb-0">
+            <small><strong>Certification:</strong> I hereby certify that the information provided above is accurate and complete to the best of my knowledge.</small>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" onclick="submitHealthForm()">Submit & Complete Booking</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .slot-card {
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    transition: all 0.3s;
+  }
+
+  .slot-card:hover {
+    border-color: #dc3545;
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.1);
+  }
+
+  .slot-card.booked {
+    background-color: #f8f9fa;
+    opacity: 0.7;
+  }
+
+  .appointment-card {
+    border-left: 4px solid #dc3545;
+  }
+
+  .appointment-card.completed {
+    border-left-color: #28a745;
+  }
+
+  .appointment-card.cancelled {
+    border-left-color: #6c757d;
+  }
+</style>
+
+<script>
+{% csrf_token %}
+let selectedSlotId = null;
+let selectedAppointmentId = null;
+const bookingModal = new bootstrap.Modal(document.getElementById('bookingModal'));
+const healthModal = new bootstrap.Modal(document.getElementById('healthModal'));
+
+async function loadAllSlots() {
+  try {
+    const response = await fetch('/api/slots/upcoming/');
+    if (!response.ok) {
+      console.error('API Response:', response.status, response.statusText);
+      throw new Error('Failed to load slots');
+    }
+    const slots = await response.json();
+    console.log('Loaded slots:', slots.length);
+    renderSlots(slots);
+  } catch (error) {
+    console.error('Error loading slots:', error);
+    document.getElementById('slotsContainer').innerHTML = '<div class="alert alert-warning"><p class="mb-0">Unable to load available slots. Please try refreshing the page or contact support.</p></div>';
+  }
+}
+
+async function searchSlots() {
+  const city = document.getElementById('cityFilter').value;
+  const dateFrom = document.getElementById('dateFilter').value;
+  
+  if (!city && !dateFrom) {
+    alert('Please enter a city or select a date to search.');
+    return;
+  }
+  
+  let url = '/api/slots/';
+  const params = new URLSearchParams();
+  if (city) params.append('city', city);
+  if (dateFrom) params.append('date_from', dateFrom);
+  
+  if (params.toString()) {
+    url += '?' + params.toString();
+  }
+  
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Search failed');
+    const slots = await response.json();
+    if (slots.length === 0) {
+      document.getElementById('slotsContainer').innerHTML = '<div class="alert alert-info">No available slots found for your search. Try different filters.</div>';
+    } else {
+      renderSlots(slots);
+    }
+  } catch (error) {
+    console.error('Error searching slots:', error);
+    document.getElementById('slotsContainer').innerHTML = '<div class="alert alert-warning">Error searching slots. Please try again.</div>';
+  }
+}
+
+function renderSlots(slots) {
+  const container = document.getElementById('slotsContainer');
+  
+  if (slots.length === 0) {
+    container.innerHTML = '<div class="alert alert-info">No available slots found. Try different filters.</div>';
+    return;
+  }
+  
+  container.innerHTML = slots.map(slot => `
+    <div class="card slot-card mb-3 ${!slot.is_available_for_booking ? 'booked' : ''}">
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-8">
+            <h6 class="card-title mb-2">${slot.blood_bank}</h6>
+            <p class="mb-1"><strong>📍</strong> ${slot.city}${slot.address ? ', ' + slot.address : ''}</p>
+            <p class="mb-1"><strong>📅</strong> ${formatDate(slot.date)} • <strong>⏰</strong> ${slot.start_time.substring(0, 5)} - ${slot.end_time.substring(0, 5)}</p>
+            <p class="mb-0"><strong>👥</strong> ${slot.remaining_slots} of ${slot.max_donors} slots available</p>
+            ${slot.notes ? `<p class="text-muted small mt-2">${slot.notes}</p>` : ''}
+          </div>
+          <div class="col-md-4 text-end">
+            ${slot.is_available_for_booking ? 
+              `<button class="btn btn-danger" onclick="openBookingModal(${slot.id}, '${slot.blood_bank}', '${slot.date}', '${slot.start_time}')">Book Now</button>` :
+              `<button class="btn btn-secondary disabled">Fully Booked</button>`
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function formatDate(dateStr) {
+  return new Date(dateStr).toLocaleDateString('en-US', { 
+    weekday: 'short', 
+    month: 'short', 
+    day: 'numeric' 
+  });
+}
+
+function openBookingModal(slotId, bankName, date, time) {
+  selectedSlotId = slotId;
+  document.getElementById('slotDetails').innerHTML = `
+    <p><strong>Blood Bank:</strong> ${bankName}</p>
+    <p><strong>Date:</strong> ${formatDate(date)}</p>
+    <p><strong>Time:</strong> ${time.substring(0, 5)}</p>
+  `;
+  bookingModal.show();
+}
+
+async function confirmBooking() {
+  if (!selectedSlotId) return;
+  
+  try {
+    const response = await fetch('/api/my-appointments/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCookie('csrftoken')
+      },
+      body: JSON.stringify({ slot_id: selectedSlotId })
+    });
+    
+    if (response.ok) {
+      const appointment = await response.json();
+      selectedAppointmentId = appointment.id;
+      console.log('Appointment created:', appointment);
+      bookingModal.hide();
+      healthModal.show();
+    } else {
+      const errorData = await response.json();
+      console.error('Booking error:', errorData);
+      alert('Error booking appointment: ' + (errorData.detail || JSON.stringify(errorData)));
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    alert('Error booking appointment');
+  }
+}
+
+async function submitHealthForm() {
+  const form = document.getElementById('healthForm');
+  const data = {};
+  
+  // Get all form fields
+  const inputs = form.querySelectorAll('input, textarea, select');
+  
+  inputs.forEach(input => {
+    if (input.type === 'checkbox') {
+      // Handle checkboxes - unchecked means false
+      data[input.name] = input.checked;
+    } else if (input.type === 'number' && input.value) {
+      data[input.name] = parseFloat(input.value);
+    } else if (input.value) {
+      data[input.name] = input.value;
+    }
+  });
+  
+  console.log('Health Form Data:', data);
+  
+  try {
+    const response = await fetch(`/api/appointments/${selectedAppointmentId}/health-questionnaire/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCookie('csrftoken')
+      },
+      body: JSON.stringify(data)
+    });
+    
+    if (response.ok) {
+      healthModal.hide();
+      alert('Appointment booked successfully! Please confirm your appointment.');
+      loadMyAppointments();
+      loadAllSlots();
+    } else {
+      const errorData = await response.json();
+      console.error('Server error:', errorData);
+      alert('Error submitting health form: ' + JSON.stringify(errorData));
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    alert('Error submitting health form');
+  }
+}
+
+async function loadMyAppointments() {
+  try {
+    const response = await fetch('/api/my-appointments/');
+    if (!response.ok) {
+      if (response.status === 401) {
+        document.getElementById('myAppointments').innerHTML = '<p class="text-info">Please <a href="/login/">log in</a> to view your appointments.</p>';
+        return;
+      }
+      throw new Error('Failed to load appointments');
+    }
+    const appointments = await response.json();
+    renderMyAppointments(appointments);
+  } catch (error) {
+    console.error('Error loading appointments:', error);
+    document.getElementById('myAppointments').innerHTML = '<p class="text-warning">Unable to load your appointments. Please refresh the page.</p>';
+  }
+}
+
+function renderMyAppointments(appointments) {
+  const container = document.getElementById('myAppointments');
+  
+  if (appointments.length === 0) {
+    container.innerHTML = '<p class="text-muted">You haven\'t booked any appointments yet.</p>';
+    return;
+  }
+  
+  container.innerHTML = appointments.map(apt => `
+    <div class="card appointment-card mb-3 ${apt.status}">
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-8">
+            <h6 class="card-title">${apt.slot_details.blood_bank}</h6>
+            <p class="mb-1"><strong>📅</strong> ${formatDate(apt.slot_details.date)} • <strong>⏰</strong> ${apt.slot_details.start_time.substring(0, 5)}</p>
+            <p class="mb-0"><strong>Status:</strong> <span class="badge bg-${getStatusColor(apt.status)}">${apt.status}</span></p>
+          </div>
+          <div class="col-md-4 text-end">
+            ${apt.status === 'scheduled' ? 
+              `<button class="btn btn-sm btn-danger" onclick="confirmAppointment(${apt.id})">Confirm</button>
+               <button class="btn btn-sm btn-outline-danger" onclick="cancelAppointment(${apt.id})">Cancel</button>` :
+              ''
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function getStatusColor(status) {
+  const colors = {
+    'scheduled': 'warning',
+    'confirmed': 'info',
+    'completed': 'success',
+    'cancelled': 'danger',
+    'no_show': 'secondary'
+  };
+  return colors[status] || 'secondary';
+}
+
+async function confirmAppointment(appointmentId) {
+  try {
+    await fetch(`/api/my-appointments/${appointmentId}/confirm/`, {
+      method: 'POST',
+      headers: { 'X-CSRFToken': getCookie('csrftoken') }
+    });
+    loadMyAppointments();
+  } catch (error) {
+    console.error('Error:', error);
+  }
+}
+
+async function cancelAppointment(appointmentId) {
+  if (confirm('Are you sure you want to cancel this appointment?')) {
+    try {
+      await fetch(`/api/my-appointments/${appointmentId}/cancel/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCookie('csrftoken') }
+      });
+      loadMyAppointments();
+      loadAllSlots();
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  }
+}
+
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+
+// Slots and appointments are rendered server-side on initial load.
+// Use "Show All" / "Search Slots" to refresh slots; booking/cancel refreshes both.
+</script>
+{% endblock %}

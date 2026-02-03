@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+
+{% block title %}My Activity Timeline - VeinLine{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row">
+    <div class="col-lg-10 mx-auto">
+      <h1 class="display-5 fw-bold mb-2">📊 My Activity Timeline</h1>
+      <p class="lead text-muted mb-4">Track your donations, achievements, and impact</p>
+
+      <!-- Stats Overview -->
+      <div class="row g-3 mb-5">
+        <div class="col-md-3">
+          <div class="card text-center border-0 shadow-sm">
+            <div class="card-body">
+              <div style="font-size: 2.5rem;">💉</div>
+              <h6 class="text-muted mb-0">Total Donations</h6>
+              <h3 class="fw-bold text-danger" id="totalDonations">0</h3>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card text-center border-0 shadow-sm">
+            <div class="card-body">
+              <div style="font-size: 2.5rem;">❤️</div>
+              <h6 class="text-muted mb-0">Lives Saved</h6>
+              <h3 class="fw-bold text-success" id="livesSaved">0</h3>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card text-center border-0 shadow-sm">
+            <div class="card-body">
+              <div style="font-size: 2.5rem;">🏆</div>
+              <h6 class="text-muted mb-0">Badges Earned</h6>
+              <h3 class="fw-bold text-warning" id="badgesEarned">0</h3>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card text-center border-0 shadow-sm">
+            <div class="card-body">
+              <div style="font-size: 2.5rem;">⭐</div>
+              <h6 class="text-muted mb-0">Average Rating</h6>
+              <h3 class="fw-bold text-info" id="avgRating">0</h3>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Timeline -->
+      <div class="card shadow-sm" style="border: 2px solid #dc3545;">
+        <div class="card-header bg-light">
+          <h5 class="mb-0">Activity Feed</h5>
+        </div>
+        <div class="card-body p-0">
+          <div id="timeline" class="timeline">
+            <div class="text-center py-5">
+              <div class="spinner-border text-danger" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .timeline {
+    position: relative;
+    padding: 2rem 0;
+  }
+
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 40px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #e9ecef;
+  }
+
+  .timeline-event {
+    margin-bottom: 2rem;
+    padding-left: 120px;
+    position: relative;
+  }
+
+  .timeline-marker {
+    position: absolute;
+    left: 20px;
+    top: 5px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: white;
+    border: 3px solid #dc3545;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+  }
+
+  .timeline-content {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 6px;
+    border-left: 4px solid #dc3545;
+  }
+
+  .timeline-event.achievement .timeline-marker {
+    border-color: #ffc107;
+  }
+
+  .timeline-event.achievement .timeline-content {
+    border-left-color: #ffc107;
+  }
+
+  .timeline-event.donation .timeline-marker {
+    border-color: #28a745;
+  }
+
+  .timeline-event.donation .timeline-content {
+    border-left-color: #28a745;
+  }
+
+  .timeline-date {
+    color: #6c757d;
+    font-size: 0.85rem;
+    margin-top: 0.5rem;
+  }
+</style>
+
+<script>
+async function loadActivity() {
+  try {
+    // Load donor stats
+    const statsResponse = await fetch('/api/donor/stats/');
+    if (!statsResponse.ok) throw new Error('Failed to load stats');
+    const stats = await statsResponse.json();
+    
+    document.getElementById('totalDonations').textContent = stats.total_donations || 0;
+    document.getElementById('livesSaved').textContent = stats.total_lives_saved || 0;
+    document.getElementById('badgesEarned').textContent = (stats.badges || []).length;
+
+    // Load feedback stats
+    const feedbackResponse = await fetch('/api/feedback/stats/?donor_id=' + getUserId());
+    if (feedbackResponse.ok) {
+      const feedbackStats = await feedbackResponse.json();
+      document.getElementById('avgRating').textContent = feedbackStats.average_rating || 0;
+    }
+
+    // Build timeline
+    const events = [];
+    
+    // Add donation appointments
+    const appointmentsResponse = await fetch('/api/my-appointments/');
+    if (appointmentsResponse.ok) {
+      const appointments = await appointmentsResponse.json();
+      
+      appointments.forEach(apt => {
+        if (apt.donation_completed) {
+          events.push({
+            type: 'donation',
+            title: `Donated ${apt.units_donated || 1} unit(s) of blood`,
+            description: `At ${apt.slot_details.blood_bank}`,
+            date: new Date(apt.completed_at),
+            icon: '💉'
+          });
+        }
+      });
+    }
+
+    // Add achievement badges
+    (stats.badges || []).forEach(badge => {
+      events.push({
+        type: 'achievement',
+        title: '🎖️ Badge Earned',
+        description: badge,
+        date: new Date(stats.updated_at),
+        icon: '🏆'
+      });
+    });
+
+    // Sort by date (newest first)
+    events.sort((a, b) => b.date - a.date);
+
+    // Render timeline
+    renderTimeline(events);
+  } catch (error) {
+    console.error('Error loading activity:', error);
+    document.getElementById('timeline').innerHTML = '<p class="text-center text-muted py-5">No activity data available. Start donating to build your timeline!</p>';
+  }
+}
+
+function renderTimeline(events) {
+  const container = document.getElementById('timeline');
+  
+  if (events.length === 0) {
+    container.innerHTML = '<p class="text-center text-muted py-5">No activity yet. Start donating to build your timeline!</p>';
+    return;
+  }
+
+  container.innerHTML = events.map(event => `
+    <div class="timeline-event ${event.type}">
+      <div class="timeline-marker">${event.icon}</div>
+      <div class="timeline-content">
+        <h6 class="mb-1">${event.title}</h6>
+        <p class="mb-0 text-muted">${event.description}</p>
+        <div class="timeline-date">${formatDate(event.date)}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function formatDate(date) {
+  return new Date(date).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+}
+
+function getUserId() {
+  // Get user ID from page or API
+  return document.querySelector('[data-user-id]')?.dataset.userId || null;
+}
+
+{% if user.is_authenticated %}
+document.addEventListener('DOMContentLoaded', loadActivity);
+{% else %}
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('timeline').innerHTML = '<p class="text-center text-muted py-5"><a href="/login/">Sign in</a> to see your timeline</p>';
+});
+{% endif %}
+</script>
+{% endblock %}

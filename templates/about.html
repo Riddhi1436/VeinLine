@@ -1,0 +1,335 @@
+{% extends "base.html" %}
+
+{% block title %}About VeinLine — Modern Blood Donation Platform{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero p-5 rounded-4 shadow-sm text-white mb-5" style="position: relative; z-index: 1; min-height: 500px; display: flex; align-items: center;">
+  <div class="row align-items-center w-100">
+    <div class="col-lg-8 mx-auto text-center" style="position: relative; z-index: 2; animation: fadeInUp 0.8s ease-out;">
+      <span class="badge bg-light text-danger px-3 py-2 fw-semibold mb-4" style="animation: scaleIn 0.6s ease-out;">
+        🩸 About Our Mission
+      </span>
+      <h1 class="display-3 fw-bold mb-4">
+        Saving Lives Through<br>Technology & Compassion
+      </h1>
+      <p class="lead fs-5 opacity-90">
+        VeinLine is a modern, privacy-first blood donation platform that connects donors with patients 
+        in urgent need. We believe that technology should serve humanity.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- Mission Section -->
+<section class="py-5 mb-5">
+  <div class="container">
+    <div class="row g-5 align-items-center">
+      <div class="col-lg-6">
+        <h2 class="section-title mb-4">Our Mission</h2>
+        <p class="lead text-muted mb-4">
+          VeinLine is a production-ready blood donation platform designed to save lives by connecting 
+          blood donors with patients in urgent need.
+        </p>
+        <p class="text-muted mb-4">
+          We prioritize <strong>privacy, speed, and accessibility</strong> to ensure that help reaches 
+          those who need it most, when they need it most. Our platform uses intelligent matching 
+          algorithms to connect compatible donors with patients based on blood group compatibility, 
+          location proximity, and availability status.
+        </p>
+        
+        <div class="d-flex flex-column gap-3">
+          <div class="d-flex gap-3">
+            <span class="h3 text-danger">✓</span>
+            <div>
+              <h5 class="fw-bold mb-1">Privacy Protected</h5>
+              <p class="text-muted small mb-0">Donor contact information remains hidden until explicit consent is given</p>
+            </div>
+          </div>
+          <div class="d-flex gap-3">
+            <span class="h3 text-danger">✓</span>
+            <div>
+              <h5 class="fw-bold mb-1">Lightning Fast</h5>
+              <p class="text-muted small mb-0">Instant matching and SMS alerts connect donors with patients in seconds</p>
+            </div>
+          </div>
+          <div class="d-flex gap-3">
+            <span class="h3 text-danger">✓</span>
+            <div>
+              <h5 class="fw-bold mb-1">Accessible Everywhere</h5>
+              <p class="text-muted small mb-0">SMS integration works in low-internet areas, making our platform truly accessible</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-6">
+        <div class="glass rounded-4 p-5" style="backdrop-filter: blur(20px);">
+            <div class="row g-3">
+            <div class="col-6">
+              <div class="stat-card rounded-3 p-4 text-center">
+                <div class="stat-number">10K+</div>
+                <small class="text-muted fw-semibold">Active Users</small>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="stat-card rounded-3 p-4 text-center">
+                <div class="stat-number">5K+</div>
+                <small class="text-muted fw-semibold">Lives Saved</small>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="stat-card rounded-3 p-4 text-center">
+                <div class="stat-number">24/7</div>
+                <small class="text-muted fw-semibold">Available</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Key Features Section -->
+<section class="py-5 mb-5">
+  <div class="container">
+    <div class="text-center mb-5">
+      <h2 class="section-title">Why Choose VeinLine?</h2>
+      <p class="section-subtitle">Industry-leading features for modern blood donation management</p>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="feature-card rounded-4 p-5 h-100 shadow hover-lift animated">
+          <div class="icon-wrapper mb-4" style="width: 60px; height: 60px; font-size: 28px;">🔒</div>
+          <h4 class="fw-bold text-veinline mb-3">Privacy First</h4>
+          <p class="text-muted mb-3">
+            Donor phone numbers and contact details are hidden by default. Contact information is only 
+            revealed after explicit consent to a specific SOS request.
+          </p>
+          <ul class="list-unstyled small text-muted">
+            <li class="mb-2">• Hidden by default</li>
+            <li class="mb-2">• Per-request consent</li>
+            <li class="mb-2">• GDPR compliant</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="feature-card rounded-4 p-5 h-100 shadow hover-lift animated" style="animation-delay: 0.1s;">
+          <div class="icon-wrapper mb-4" style="width: 60px; height: 60px; font-size: 28px;">🎯</div>
+          <h4 class="fw-bold text-veinline mb-3">Smart Matching</h4>
+          <p class="text-muted mb-3">
+            Our rule-based matching system considers blood group compatibility, city proximity, and 
+            donor availability to find the best matches.
+          </p>
+          <ul class="list-unstyled small text-muted">
+            <li class="mb-2">• Blood group matching</li>
+            <li class="mb-2">• Location proximity</li>
+            <li class="mb-2">• Availability checking</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="feature-card rounded-4 p-5 h-100 shadow hover-lift animated" style="animation-delay: 0.2s;">
+          <div class="icon-wrapper mb-4" style="width: 60px; height: 60px; font-size: 28px;">📱</div>
+          <h4 class="fw-bold text-veinline mb-3">SMS Integration</h4>
+          <p class="text-muted mb-3">
+            Send SOS alerts via SMS to compatible donors. Donors can respond with YES/NO via SMS, 
+            perfect for rural areas with limited internet.
+          </p>
+          <ul class="list-unstyled small text-muted">
+            <li class="mb-2">• Instant SMS alerts</li>
+            <li class="mb-2">• SMS responses</li>
+            <li class="mb-2">• Low bandwidth</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="feature-card rounded-4 p-5 h-100 shadow hover-lift animated" style="animation-delay: 0.3s;">
+          <div class="icon-wrapper mb-4" style="width: 60px; height: 60px; font-size: 28px;">📊</div>
+          <h4 class="fw-bold text-veinline mb-3">Analytics</h4>
+          <p class="text-muted mb-3">
+            Real-time analytics dashboard with Chart.js visualizations showing blood group shortages, 
+            active donors, and emergency statistics.
+          </p>
+          <ul class="list-unstyled small text-muted">
+            <li class="mb-2">• Inventory tracking</li>
+            <li class="mb-2">• Donor analytics</li>
+            <li class="mb-2">• SOS statistics</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="feature-card rounded-4 p-5 h-100 shadow hover-lift animated" style="animation-delay: 0.4s;">
+          <div class="icon-wrapper mb-4" style="width: 60px; height: 60px; font-size: 28px;">👥</div>
+          <h4 class="fw-bold text-veinline mb-3">Role-Based Access</h4>
+          <p class="text-muted mb-3">
+            Separate dashboards for donors, patients, and administrators. Each role has access to 
+            relevant features based on their needs.
+          </p>
+          <ul class="list-unstyled small text-muted">
+            <li class="mb-2">• Donor dashboard</li>
+            <li class="mb-2">• Patient dashboard</li>
+            <li class="mb-2">• Admin panel</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="feature-card rounded-4 p-5 h-100 shadow hover-lift animated" style="animation-delay: 0.5s;">
+          <div class="icon-wrapper mb-4" style="width: 60px; height: 60px; font-size: 28px;">🔐</div>
+          <h4 class="fw-bold text-veinline mb-3">Security</h4>
+          <p class="text-muted mb-3">
+            JWT-based authentication using Django REST Framework. Enterprise-grade security with 
+            encrypted passwords and secure API endpoints.
+          </p>
+          <ul class="list-unstyled small text-muted">
+            <li class="mb-2">• JWT authentication</li>
+            <li class="mb-2">• Encrypted passwords</li>
+            <li class="mb-2">• Secure API</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How It Works -->
+<section class="py-5 mb-5">
+  <div class="container">
+    <div class="text-center mb-5">
+      <h2 class="section-title">How VeinLine Works</h2>
+      <p class="section-subtitle">A simple 4-step process to save lives</p>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-lg-10 mx-auto">
+        <div class="row g-4">
+          <!-- Step 1 -->
+          <div class="col-md-6">
+            <div class="card rounded-4 shadow p-4 h-100 hover-lift">
+              <div class="d-flex align-items-start mb-3">
+                <div class="badge bg-danger rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; font-size: 1.5rem; flex-shrink: 0;">1</div>
+                <h5 class="fw-bold ms-3 mb-0">Register & Setup Profile</h5>
+              </div>
+              <p class="text-muted mb-0">
+                Create an account as a donor or patient. Provide your blood group, location, and availability status.
+              </p>
+            </div>
+          </div>
+
+          <!-- Step 2 -->
+          <div class="col-md-6">
+            <div class="card rounded-4 shadow p-4 h-100 hover-lift" style="margin-top: 40px;">
+              <div class="d-flex align-items-start mb-3">
+                <div class="badge bg-danger rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; font-size: 1.5rem; flex-shrink: 0;">2</div>
+                <h5 class="fw-bold ms-3 mb-0">Patient Creates SOS</h5>
+              </div>
+              <p class="text-muted mb-0">
+                When a patient needs blood urgently, they create an SOS request with blood group needed and location.
+              </p>
+            </div>
+          </div>
+
+          <!-- Step 3 -->
+          <div class="col-md-6">
+            <div class="card rounded-4 shadow p-4 h-100 hover-lift">
+              <div class="d-flex align-items-start mb-3">
+                <div class="badge bg-danger rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; font-size: 1.5rem; flex-shrink: 0;">3</div>
+                <h5 class="fw-bold ms-3 mb-0">Smart Matching</h5>
+              </div>
+              <p class="text-muted mb-0">
+                Our system finds compatible donors based on blood type, location, and availability instantly.
+              </p>
+            </div>
+          </div>
+
+          <!-- Step 4 -->
+          <div class="col-md-6">
+            <div class="card rounded-4 shadow p-4 h-100 hover-lift" style="margin-top: 40px;">
+              <div class="d-flex align-items-start mb-3">
+                <div class="badge bg-danger rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; font-size: 1.5rem; flex-shrink: 0;">4</div>
+                <h5 class="fw-bold ms-3 mb-0">Connection & Delivery</h5>
+              </div>
+              <p class="text-muted mb-0">
+                Donors respond via SMS, consent is confirmed, and contact details are shared to complete the donation.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Technology Stack -->
+<section class="py-5 mb-5">
+  <div class="container">
+    <div class="text-center mb-5">
+      <h2 class="section-title">Built With Modern Technology</h2>
+      <p class="section-subtitle">Production-ready stack with enterprise-grade reliability</p>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-md-3">
+        <div class="card rounded-4 shadow p-5 h-100 text-center hover-lift">
+          <div class="h2 mb-3">🐍</div>
+          <h5 class="fw-bold mb-2">Django 5.1</h5>
+          <p class="text-muted small mb-0">Robust backend framework with comprehensive ORM and admin panel</p>
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <div class="card rounded-4 shadow p-5 h-100 text-center hover-lift" style="margin-top: 20px;">
+          <div class="h2 mb-3">⚙️</div>
+          <h5 class="fw-bold mb-2">Django REST Framework</h5>
+          <p class="text-muted small mb-0">Powerful API framework for building RESTful APIs with ease</p>
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <div class="card rounded-4 shadow p-5 h-100 text-center hover-lift">
+          <div class="h2 mb-3">🗄️</div>
+          <h5 class="fw-bold mb-2">MySQL 8.0</h5>
+          <p class="text-muted small mb-0">Reliable relational database for data integrity and performance</p>
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <div class="card rounded-4 shadow p-5 h-100 text-center hover-lift" style="margin-top: 20px;">
+          <div class="h2 mb-3">🔑</div>
+          <h5 class="fw-bold mb-2">JWT Auth</h5>
+          <p class="text-muted small mb-0">Secure token-based authentication and authorization</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-5">
+  <div class="container">
+    <div class="gradient-border rounded-4 p-5 text-center" style="background: linear-gradient(135deg, rgba(254, 226, 226, 0.8) 0%, rgba(255, 255, 255, 0.9) 100%);">
+      <h2 class="fw-bold mb-3">Join Our Mission to Save Lives</h2>
+      <p class="text-muted mb-4 fs-5">
+        Whether you're a donor, patient, or healthcare administrator, VeinLine provides the tools 
+        you need to make a real difference.
+      </p>
+      <div class="d-flex gap-3 justify-content-center flex-wrap">
+        <a class="btn btn-veinline btn-lg px-5 fw-bold" href="{% url 'register' %}">
+          Get Started Free
+        </a>
+        <a class="btn btn-outline-danger btn-lg px-5 fw-bold" href="{% url 'home' %}">
+          Back to Home
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+

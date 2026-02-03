@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard — VeinLine{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <div>
+    <h2 class="h2 mb-1 fw-bold">
+      <span style="font-size: 2rem;">📊</span> Admin Dashboard
+    </h2>
+    <div class="text-muted">Platform analytics and inventory overview.</div>
+  </div>
+  <a class="btn btn-danger btn-lg" href="/admin/">Open Django Admin</a>
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-md-4">
+    <div class="card stat-card rounded-4 shadow-sm">
+      <div class="card-body p-4">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <div class="text-muted small fw-semibold">Active Donors</div>
+          <div class="icon-wrapper" style="width: 40px; height: 40px; font-size: 20px;">✅</div>
+        </div>
+        <div class="h3 mb-0 fw-bold text-success">{{ donors_active }}</div>
+        <div class="mt-3 small text-muted">Currently available donors</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card stat-card rounded-4 shadow-sm">
+      <div class="card-body p-4">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <div class="text-muted small fw-semibold">Inactive Donors</div>
+          <div class="icon-wrapper" style="width: 40px; height: 40px; font-size: 20px;">⏸️</div>
+        </div>
+        <div class="h3 mb-0 fw-bold text-muted">{{ donors_inactive }}</div>
+        <div class="mt-3 small text-muted">Currently unavailable donors</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card stat-card rounded-4 shadow-sm">
+      <div class="card-body p-4">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <div class="text-muted small fw-semibold">Quick Links</div>
+          <div class="icon-wrapper" style="width: 40px; height: 40px; font-size: 20px;">🔗</div>
+        </div>
+        <div class="d-flex gap-2 mt-3 flex-wrap">
+          <a class="btn btn-outline-danger btn-sm" href="/admin/donations/bloodbankinventory/">📦 Inventory</a>
+          <a class="btn btn-outline-danger btn-sm" href="/admin/core/bloodgroupcompatibility/">🩸 Compatibility</a>
+          <a class="btn btn-outline-danger btn-sm" href="/admin/sos/sosrequest/">🚨 SOS</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-lg-6">
+    <div class="card rounded-4 shadow-sm h-100">
+      <div class="card-body p-4">
+        <div class="d-flex align-items-center mb-3">
+          <div class="icon-wrapper me-3" style="width: 40px; height: 40px; font-size: 20px;">📊</div>
+          <h5 class="fw-bold mb-0">Donors by Blood Group</h5>
+        </div>
+        <canvas id="donorsByGroup"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card rounded-4 shadow-sm h-100">
+      <div class="card-body p-4">
+        <div class="d-flex align-items-center mb-3">
+          <div class="icon-wrapper me-3" style="width: 40px; height: 40px; font-size: 20px;">📈</div>
+          <h5 class="fw-bold mb-0">SOS by Status</h5>
+        </div>
+        <canvas id="sosByStatus"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card rounded-4 shadow-sm">
+  <div class="card-body p-4">
+    <div class="d-flex align-items-center mb-3">
+      <div class="icon-wrapper me-3" style="width: 48px; height: 48px; font-size: 24px;">📦</div>
+      <div>
+        <h4 class="fw-bold mb-0">Blood Bank Inventory</h4>
+        <p class="text-muted small mb-0">Top 50 inventory items across all locations</p>
+      </div>
+    </div>
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead>
+          <tr>
+            <th>City</th>
+            <th>Blood Group</th>
+            <th>Units Available</th>
+            <th>Last Updated</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in inventory %}
+            <tr>
+              <td><strong>{{ row.city }}</strong></td>
+              <td><span class="badge bg-danger px-3 py-2">{{ row.blood_group }}</span></td>
+              <td class="fw-bold text-veinline">{{ row.units_available }}</td>
+              <td class="text-muted small">{{ row.updated_at|date:"M d, Y H:i" }}</td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="4" class="text-center text-muted py-5">
+                <div class="mb-2" style="font-size: 3rem;">📭</div>
+                <div>No inventory data yet. Add inventory via the admin panel.</div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+  const donorsByGroup = {{ donors_by_group|safe }};
+  const sosByStatus = {{ sos_by_status|safe }};
+
+  new Chart(document.getElementById('donorsByGroup'), {
+    type: 'bar',
+    data: {
+      labels: donorsByGroup.map(x => x.blood_group),
+      datasets: [{ label: 'Donors', data: donorsByGroup.map(x => x.count), backgroundColor: '#b91c1c' }]
+    },
+    options: { responsive: true, plugins: { legend: { display: false } } }
+  });
+
+  new Chart(document.getElementById('sosByStatus'), {
+    type: 'doughnut',
+    data: {
+      labels: sosByStatus.map(x => x.status),
+      datasets: [{ data: sosByStatus.map(x => x.count), backgroundColor: ['#b91c1c','#ef4444','#fca5a5'] }]
+    },
+    options: { responsive: true }
+  });
+</script>
+{% endblock %}
+
+

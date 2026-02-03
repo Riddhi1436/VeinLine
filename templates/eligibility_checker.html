@@ -1,0 +1,482 @@
+{% extends "base.html" %}
+
+{% block title %}Eligibility Checker - VeinLine{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <!-- Header -->
+      <div class="mb-5 text-center">
+        <h1 class="display-4 fw-bold mb-2" style="color: #dc3545;">💉 Donation Eligibility Checker</h1>
+        <p class="lead text-dark" style="color: #333; font-weight: 600;">Quick check if you're eligible to donate blood</p>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="mb-4">
+        <div class="progress" style="height: 12px; border-radius: 8px; background: #e9ecef;">
+          <div id="progressBar" class="progress-bar bg-danger" role="progressbar" style="width: 0%; border-radius: 8px;"></div>
+        </div>
+        <small class="text-danger fw-bold" style="margin-top: 0.5rem; display: block;"><span id="currentQuestion">1</span> of 15 questions</small>
+      </div>
+
+      <!-- Form -->
+      <form id="eligibilityForm">
+        <div id="questionsContainer"></div>
+      </form>
+
+      <!-- Result Section -->
+      <div id="resultSection" style="display: none;">
+        <div class="card border-0 shadow-lg">
+          <div class="card-body">
+            <h3 class="card-title mb-3" id="resultTitle"></h3>
+            <p id="resultMessage" class="card-text"></p>
+            <div id="resultDetails" class="mt-4"></div>
+            <div class="mt-4">
+              <button class="btn btn-danger" onclick="resetForm()">Check Again</button>
+              <a href="/appointments/" class="btn btn-primary">Book Appointment</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .question-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%);
+    border: 3px solid #dc3545;
+    border-radius: 12px;
+    padding: 2.5rem;
+    margin-bottom: 1rem;
+    transition: all 0.3s;
+    box-shadow: 0 4px 15px rgba(220, 53, 69, 0.15);
+  }
+
+  .question-card.active {
+    border-color: #dc3545;
+    box-shadow: 0 8px 25px rgba(220, 53, 69, 0.25);
+    transform: translateY(-2px);
+  }
+
+  .question-card h5 {
+    color: #1a1a1a;
+    font-weight: 700;
+    font-size: 1.3rem;
+    line-height: 1.6;
+  }
+
+  .question-card .text-muted {
+    color: #dc3545 !important;
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+
+  .radio-group {
+    background: #fafafa;
+    padding: 1rem;
+    border-radius: 8px;
+    border-left: 4px solid #dc3545;
+  }
+
+  .radio-group label {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: white;
+    border: 2px solid #e9ecef;
+    color: #333;
+    font-weight: 500;
+  }
+
+  .radio-group label:hover {
+    background-color: #fff3f3;
+    border-color: #dc3545;
+    color: #dc3545;
+  }
+
+  .radio-group label span {
+    font-weight: 600;
+    font-size: 1.05rem;
+    color: #1a1a1a;
+  }
+
+  .radio-group input[type="radio"] {
+    margin-right: 1rem;
+    cursor: pointer;
+    width: 20px;
+    height: 20px;
+    accent-color: #dc3545;
+  }
+
+  .result-badge {
+    font-size: 5rem;
+    text-align: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .eligible {
+    color: #28a745;
+  }
+
+  .ineligible {
+    color: #dc3545;
+  }
+
+  #resultTitle {
+    color: #1a1a1a;
+    font-weight: 800;
+    font-size: 2rem;
+  }
+
+  #resultMessage {
+    color: #333;
+    font-size: 1.1rem;
+    line-height: 1.8;
+    font-weight: 500;
+  }
+
+  .conditions-list {
+    background: linear-gradient(135deg, #fff3f3 0%, #ffe9e9 100%);
+    border-left: 6px solid #dc3545;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+  }
+
+  .conditions-list h6 {
+    color: #dc3545;
+    font-weight: 700;
+    font-size: 1.1rem;
+  }
+
+  .conditions-list ul {
+    color: #333;
+    font-weight: 500;
+  }
+
+  .conditions-list li {
+    margin-bottom: 0.75rem;
+    color: #333;
+    font-weight: 500;
+  }
+
+  .alert-success {
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    border: 2px solid #28a745;
+    color: #155724;
+    border-radius: 8px;
+  }
+
+  .alert-success strong {
+    color: #155724;
+    font-weight: 700;
+  }
+
+  .alert-success ul {
+    color: #155724;
+    font-weight: 500;
+  }
+
+  .alert-info {
+    background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+    border: 2px solid #17a2b8;
+    color: #0c5460;
+    border-radius: 8px;
+  }
+
+  .alert-info strong {
+    color: #0c5460;
+    font-weight: 700;
+  }
+
+  .btn {
+    font-weight: 700;
+    font-size: 1rem;
+    padding: 0.75rem 1.5rem;
+    transition: all 0.3s;
+  }
+
+  .btn-danger {
+    background-color: #dc3545;
+    border: 2px solid #dc3545;
+  }
+
+  .btn-danger:hover {
+    background-color: #c82333;
+    border-color: #c82333;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+  }
+
+  .btn-primary {
+    background-color: #0d6efd;
+    border: 2px solid #0d6efd;
+    font-weight: 700;
+  }
+
+  .btn-primary:hover {
+    background-color: #0b5ed7;
+    border-color: #0b5ed7;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
+  }
+
+  .btn-group-nav {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 2rem;
+  }
+
+  .btn-group-nav button {
+    flex: 1;
+  }
+</style>
+
+<script>
+const questions = [
+  {
+    id: 'has_fever',
+    question: 'Do you currently have fever, chills, or body temperature above 37.5°C?',
+    disqualifies: true,
+    category: 'General Health'
+  },
+  {
+    id: 'has_cold_or_cough',
+    question: 'Are you experiencing symptoms of respiratory infection (cough, sore throat, nasal congestion)?',
+    disqualifies: true,
+    category: 'General Health'
+  },
+  {
+    id: 'has_heart_condition',
+    question: 'Have you been diagnosed with cardiovascular disease, heart murmur, or arrhythmia?',
+    disqualifies: true,
+    category: 'Medical Conditions'
+  },
+  {
+    id: 'has_high_blood_pressure',
+    question: 'Do you have chronic uncontrolled hypertension (systolic >180 mmHg or diastolic >110 mmHg)?',
+    disqualifies: true,
+    category: 'Medical Conditions'
+  },
+  {
+    id: 'has_diabetes',
+    question: 'Do you have Type 1 or Type 2 diabetes requiring insulin treatment?',
+    disqualifies: true,
+    category: 'Medical Conditions'
+  },
+  {
+    id: 'has_hiv_or_aids',
+    question: 'Have you been diagnosed with HIV infection, AIDS, or exposed to HIV?',
+    disqualifies: true,
+    category: 'Infectious Disease'
+  },
+  {
+    id: 'has_hepatitis',
+    question: 'Have you been diagnosed with Hepatitis B, Hepatitis C, or other forms of hepatitis?',
+    disqualifies: true,
+    category: 'Infectious Disease'
+  },
+  {
+    id: 'has_cancer',
+    question: 'Have you been diagnosed with or treated for malignancy, lymphoma, or leukemia?',
+    disqualifies: true,
+    category: 'Infectious Disease'
+  },
+  {
+    id: 'has_bleeding_disorder',
+    question: 'Have you been diagnosed with a bleeding disorder, hemophilia, or thrombocytopenia?',
+    disqualifies: true,
+    category: 'Infectious Disease'
+  },
+  {
+    id: 'recent_surgery',
+    question: 'Have you undergone surgery, dental extraction, or invasive procedure within the last 6 months?',
+    disqualifies: true,
+    category: 'Recent Medical Events'
+  },
+  {
+    id: 'recent_tattoo_or_piercing',
+    question: 'Have you received a tattoo, body piercing, or acupuncture within the last 12 months?',
+    disqualifies: true,
+    category: 'Recent Medical Events'
+  },
+  {
+    id: 'recent_blood_transfusion',
+    question: 'Have you received a blood transfusion or blood product within the last 12 months?',
+    disqualifies: true,
+    category: 'Recent Medical Events'
+  },
+  {
+    id: 'recent_vaccination',
+    question: 'Have you received live attenuated vaccine (MMR, varicella, yellow fever) within the last 4 weeks?',
+    disqualifies: true,
+    category: 'Recent Medical Events'
+  },
+  {
+    id: 'takes_blood_thinners',
+    question: 'Are you taking anticoagulant therapy (Warfarin, DOACs) or high-dose antiplatelet agents?',
+    disqualifies: false,
+    category: 'Medications'
+  },
+  {
+    id: 'is_pregnant',
+    question: 'Are you currently pregnant or have you given birth within the last 6 months?',
+    disqualifies: true,
+    category: 'Special Considerations'
+  }
+];
+
+let currentQuestion = 0;
+let answers = {};
+let disqualifyingAnswers = [];
+
+function renderQuestion(index) {
+  console.log('Rendering question:', index);
+  
+  if (index >= questions.length) {
+    showResult();
+    return;
+  }
+
+  const q = questions[index];
+  const container = document.getElementById('questionsContainer');
+  
+  const html = `
+    <div class="question-card active" id="question-${index}">
+      <div class="mb-4">
+        <small class="text-muted">${q.category}</small>
+        <h5 class="mt-2 mb-4">${q.question}</h5>
+      </div>
+      <div class="radio-group">
+        <label>
+          <input type="radio" name="answer-${index}" value="no">
+          <span>👍 No</span>
+        </label>
+        <label>
+          <input type="radio" name="answer-${index}" value="yes">
+          <span>👎 Yes</span>
+        </label>
+      </div>
+      <div class="btn-group-nav" style="margin-top: 2rem;">
+        <button type="button" class="btn btn-secondary" id="prevBtn" onclick="previousQuestion()" style="display: ${index === 0 ? 'none' : 'block'};">← Previous</button>
+        <button type="button" class="btn btn-danger" id="nextBtn" onclick="submitAnswer(${index})" style="flex: ${index === 0 ? '1' : '1'};">Next Question →</button>
+      </div>
+    </div>
+  `;
+  
+  container.innerHTML = html;
+  updateProgress();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function submitAnswer(index) {
+  const selectedAnswer = document.querySelector(`input[name="answer-${index}"]:checked`);
+  
+  if (!selectedAnswer) {
+    alert('Please select an answer before proceeding.');
+    return;
+  }
+  
+  const q = questions[index];
+  const answerValue = selectedAnswer.value === 'yes';
+  answers[q.id] = answerValue;
+
+  // Add to disqualifying answers if yes and disqualifies
+  if (answerValue && q.disqualifies) {
+    if (!disqualifyingAnswers.some(item => item.id === q.id)) {
+      disqualifyingAnswers.push(q);
+    }
+  } else if (!answerValue && disqualifyingAnswers.some(item => item.id === q.id)) {
+    // Remove if changed to no
+    disqualifyingAnswers = disqualifyingAnswers.filter(item => item.id !== q.id);
+  }
+
+  // Move to next question
+  currentQuestion = index + 1;
+  renderQuestion(currentQuestion);
+}
+
+function previousQuestion() {
+  if (currentQuestion > 0) {
+    currentQuestion--;
+    renderQuestion(currentQuestion);
+  }
+}
+
+function updateProgress() {
+  const progress = ((currentQuestion + 1) / questions.length) * 100;
+  document.getElementById('progressBar').style.width = progress + '%';
+  document.getElementById('currentQuestion').textContent = currentQuestion + 1;
+}
+
+function showResult() {
+  console.log('Showing result. Disqualifying answers:', disqualifyingAnswers.length);
+  
+  const container = document.getElementById('questionsContainer');
+  container.style.display = 'none';
+  const resultSection = document.getElementById('resultSection');
+  resultSection.style.display = 'block';
+
+  const isEligible = disqualifyingAnswers.length === 0;
+  const resultTitle = document.getElementById('resultTitle');
+  const resultMessage = document.getElementById('resultMessage');
+  const resultDetails = document.getElementById('resultDetails');
+
+  if (isEligible) {
+    resultTitle.innerHTML = '<span class="result-badge eligible">✅</span><div>You\'re Eligible!</div>';
+    resultMessage.textContent = 'Great news! Based on your responses, you appear to be eligible to donate blood. You can now book an appointment at any blood bank.';
+    resultDetails.innerHTML = `
+      <div class="alert alert-success">
+        <strong>📋 Next Steps:</strong>
+        <ul class="mb-0 mt-2">
+          <li>💉 Find a nearby blood bank using our blood bank finder</li>
+          <li>📅 Book an appointment at your preferred location</li>
+          <li>✅ Complete the health questionnaire at the bank</li>
+          <li>❤️ Donate and save lives!</li>
+        </ul>
+      </div>
+    `;
+  } else {
+    resultTitle.innerHTML = '<span class="result-badge ineligible">⚠️</span><div>Not Eligible Right Now</div>';
+    resultMessage.textContent = 'Based on your responses, you\'re not currently eligible to donate. However, this may be temporary!';
+    resultDetails.innerHTML = `
+      <div class="conditions-list">
+        <h6 class="mb-3">🔴 Reasons you\'re not eligible:</h6>
+        <ul class="mb-0">
+          ${disqualifyingAnswers.map(q => `<li>✗ ${q.question}</li>`).join('')}
+        </ul>
+      </div>
+      <div class="alert alert-info mt-3">
+        <strong>💡 Good News!</strong> Many of these are temporary conditions. Once you recover, you may be able to donate. 
+        <br><br>
+        <strong>📌 Recommended Action:</strong> Check back later or consult with a blood bank about when you can donate again.
+      </div>
+    `;
+  }
+}
+
+function resetForm() {
+  console.log('Resetting form');
+  currentQuestion = 0;
+  answers = {};
+  disqualifyingAnswers = [];
+  document.getElementById('questionsContainer').style.display = 'block';
+  document.getElementById('resultSection').style.display = 'none';
+  renderQuestion(0);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Start the questionnaire when page loads
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('Page loaded, starting questionnaire');
+  renderQuestion(0);
+});
+</script>
+{% endblock %}

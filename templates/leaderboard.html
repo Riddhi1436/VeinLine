@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+
+{% block title %}Donor Leaderboard - VeinLine{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row mb-5">
+    <div class="col-lg-8">
+      <h1 class="display-4 fw-bold mb-2">🏆 Donor Leaderboard</h1>
+      <p class="lead text-muted">Recognize and celebrate our heroes saving lives</p>
+    </div>
+    <div class="col-lg-4">
+      <div class="card bg-light border-0">
+        <div class="card-body">
+          <h6 class="card-title text-muted mb-3">Filter By:</h6>
+          <div class="d-grid gap-2">
+            <button class="btn btn-outline-danger btn-sm" onclick="filterLeaderboard('all')">All Donors</button>
+            <button class="btn btn-outline-danger btn-sm" onclick="filterLeaderboard('city')">By City</button>
+            <button class="btn btn-outline-danger btn-sm" onclick="filterLeaderboard('blood')">By Blood Group</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Leaderboard Table -->
+  <div class="card border-0 shadow-sm">
+    <div class="card-header bg-danger text-white">
+      <h5 class="mb-0">Top Blood Donors</h5>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0" id="leaderboardTable">
+          <thead class="table-light">
+            <tr>
+              <th style="width: 60px;">#</th>
+              <th style="width: 200px;">Donor</th>
+              <th class="text-center">Blood Group</th>
+              <th class="text-center">Donations</th>
+              <th class="text-center">Points</th>
+              <th class="text-center">SOS Responses</th>
+              <th>Badges</th>
+            </tr>
+          </thead>
+          <tbody id="leaderboardBody">
+            <tr>
+              <td colspan="7" class="text-center py-4">
+                <div class="spinner-border text-danger" role="status">
+                  <span class="visually-hidden">Loading...</span>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Available Badges Section -->
+  <div class="row mt-5">
+    <div class="col-lg-12">
+      <h4 class="mb-4">🎖️ Available Badges</h4>
+      <div class="row g-3" id="badgesContainer">
+        <!-- Badges will be loaded here -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .badge-card {
+    background: linear-gradient(135deg, #fff5f5, #ffe8e8);
+    border: 2px solid #dc3545;
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+  }
+  
+  .badge-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .badge-card.earned {
+    background: linear-gradient(135deg, #ffeb3b, #fff176);
+    border-color: #fbc02d;
+  }
+  
+  .leaderboard-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    background: #ffe8e8;
+    border: 1px solid #dc3545;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    margin: 0.25rem;
+    color: #dc3545;
+  }
+  
+  .donor-row {
+    transition: background-color 0.2s;
+  }
+  
+  .donor-row:hover {
+    background-color: #fff5f5;
+  }
+  
+  .rank-medal {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-right: 0.5rem;
+  }
+</style>
+
+<script>
+const badgeIcons = {
+  'first_donation': '💉',
+  'five_donations': '✅',
+  'ten_donations': '🔟',
+  'hero': '🦸',
+  'lifesaver': '❤️',
+  'consistent': '📅',
+  'emergency': '🚨',
+  'trusted': '🤝',
+  'speed': '⚡'
+};
+
+// Server-side data
+const leaderboardData = (typeof window !== 'undefined' && window.top_donors) ? window.top_donors : {{ top_donors|safe|default:"[]" }};
+const badgesData = (typeof window !== 'undefined' && window.available_badges) ? window.available_badges : {{ available_badges|safe|default:"[]" }};
+
+async function loadLeaderboard(endpoint = 'api/donations/leaderboard/top_donors/') {
+  try {
+    // Use server-side data first
+    if (leaderboardData && leaderboardData.length > 0) {
+      renderLeaderboard(leaderboardData);
+      return;
+    }
+    
+    // Fall back to API if needed
+    const response = await fetch(`/${endpoint}`);
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    const data = await response.json();
+    renderLeaderboard(data);
+  } catch (error) {
+    console.error('Error loading leaderboard:', error);
+    document.getElementById('leaderboardBody').innerHTML = 
+      '<tr><td colspan="7" class="text-center text-danger">Error loading leaderboard</td></tr>';
+  }
+}
+
+function renderLeaderboard(donors) {
+  const tbody = document.getElementById('leaderboardBody');
+  
+  if (!donors || donors.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No donors yet. Be the first to donate!</td></tr>';
+    return;
+  }
+  
+  tbody.innerHTML = donors.map((donor, idx) => `
+    <tr class="donor-row">
+      <td>
+        <span class="rank-medal">${getMedalEmoji(donor.rank || idx + 1)}</span>${donor.rank || idx + 1}
+      </td>
+      <td>
+        <strong>${donor.donor_name || 'Unknown'}</strong><br>
+        <small class="text-muted">ID: ${donor.donor_id || 'N/A'}</small>
+      </td>
+      <td class="text-center">
+        <span class="badge bg-danger">${donor.blood_group || 'N/A'}</span>
+      </td>
+      <td class="text-center">
+        <strong>${donor.total_donations || 0}</strong>
+      </td>
+      <td class="text-center">
+        <span class="badge bg-warning text-dark">${donor.points || 0} pts</span>
+      </td>
+      <td class="text-center">
+        ${donor.sos_responses || 0} <small class="text-success">(${Math.round(donor.response_rate || 0)}%)</small>
+      </td>
+      <td>
+        ${(donor.badges && donor.badges.length > 0) ? 
+          donor.badges.map(badge => 
+            `<span class="leaderboard-badge" title="${badge}">${badgeIcons[badge] || '🏅'}</span>`
+          ).join('') : 
+          '<small class="text-muted">—</small>'
+        }
+      </td>
+    </tr>
+  `).join('');
+}
+
+function getMedalEmoji(rank) {
+  switch(rank) {
+    case 1: return '🥇 ';
+    case 2: return '🥈 ';
+    case 3: return '🥉 ';
+    default: return '';
+  }
+}
+
+async function loadBadges() {
+  try {
+    // Use server-side data first
+    if (badgesData && badgesData.length > 0) {
+      renderBadges(badgesData);
+      return;
+    }
+    
+    // Fall back to API
+    const response = await fetch('/api/donations/leaderboard/badges/');
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    const badges = await response.json();
+    renderBadges(badges);
+  } catch (error) {
+    console.error('Error loading badges:', error);
+  }
+}
+
+function renderBadges(badges) {
+  const container = document.getElementById('badgesContainer');
+  if (!badges || badges.length === 0) {
+    container.innerHTML = '<p class="text-muted">No badges available</p>';
+    return;
+  }
+  
+  container.innerHTML = badges.map(badge => `
+    <div class="col-md-4 col-lg-3">
+      <div class="badge-card">
+        <div class="badge-icon">${badgeIcons[badge.key] || '🏅'}</div>
+        <h6 class="mb-1">${badge.label}</h6>
+        <small class="text-muted">Achievement Badge</small>
+      </div>
+    </div>
+  `).join('');
+}
+
+function filterLeaderboard(type) {
+  if (type === 'all') {
+    loadLeaderboard('api/donations/leaderboard/top_donors/');
+  } else if (type === 'city') {
+    const city = prompt('Enter city name:');
+    if (city) {
+      loadLeaderboard(`api/donations/leaderboard/by_city/?city=${encodeURIComponent(city)}`);
+    }
+  } else if (type === 'blood') {
+    const blood = prompt('Enter blood group (e.g., O+, A-, B+, AB-):');
+    if (blood) {
+      loadLeaderboard(`api/donations/leaderboard/by_blood_group/?blood_group=${encodeURIComponent(blood)}`);
+    }
+  }
+}
+
+// Load on page load
+document.addEventListener('DOMContentLoaded', () => {
+  loadLeaderboard();
+  loadBadges();
+});
+</script>
+{% endblock %}

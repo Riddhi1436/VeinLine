@@ -1,0 +1,295 @@
+{% extends "base.html" %}
+
+{% block title %}Find Blood Banks - VeinLine{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+<style>
+  #mapContainer {
+    height: 600px;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+  }
+
+  .bank-card {
+    border-left: 4px solid #dc3545;
+    transition: all 0.3s;
+  }
+
+  .bank-card:hover {
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.15);
+    transform: translateY(-2px);
+  }
+
+  .status-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  .status-open {
+    background-color: #d4edda;
+    color: #155724;
+  }
+
+  .status-closed {
+    background-color: #f8d7da;
+    color: #721c24;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <!-- Header -->
+  <div class="mb-5">
+    <h1 class="display-5 fw-bold mb-2">🏥 Find Blood Banks</h1>
+    <p class="lead text-muted">Locate donation centers near you</p>
+  </div>
+
+  <!-- Search/Filter Section -->
+  <div class="card mb-4 border-0 shadow-sm">
+    <div class="card-body">
+      <div class="row g-3 mb-3">
+        <div class="col-md-6">
+          <label class="form-label">Search by City</label>
+          <input type="text" id="citySearch" class="form-control" placeholder="e.g. Delhi, Noida, Lucknow">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Search Radius (km)</label>
+          <input type="number" id="radiusSearch" class="form-control" value="50" min="1" max="500">
+        </div>
+      </div>
+      <div class="row g-2">
+        <div class="col-auto">
+          <button class="btn btn-danger" onclick="searchByCity()">
+            <i class="icon">🔍</i> Search by City
+          </button>
+        </div>
+        <div class="col-auto">
+          <button class="btn btn-outline-danger" onclick="searchNearby()">
+            <i class="icon">📍</i> Search Nearby
+          </button>
+        </div>
+        <div class="col-auto">
+          <button class="btn btn-outline-secondary" onclick="showOpenNow()">
+            <i class="icon">🕐</i> Open Now
+          </button>
+        </div>
+        <div class="col-auto">
+          <button class="btn btn-outline-secondary" onclick="loadAllBanks()">
+            <i class="icon">📍</i> Show All
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Map Container -->
+  <div class="card mb-4 border-0 shadow-sm">
+    <div id="mapContainer"></div>
+  </div>
+
+  <!-- Banks List -->
+  <div class="row">
+    <div class="col-lg-12">
+      <h3 class="fw-bold mb-4">Available Blood Banks</h3>
+      <div id="banksList">
+        <div class="text-center">
+          <div class="spinner-border text-danger" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+let map = null;
+let markers = [];
+let allBanks = [];
+
+function initMap() {
+  if (map === null) {
+    map = L.map('mapContainer').setView([20, 78], 4); // Center on India
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors',
+      maxZoom: 19
+    }).addTo(map);
+  }
+}
+
+function clearMarkers() {
+  markers.forEach(marker => map.removeLayer(marker));
+  markers = [];
+}
+
+async function loadAllBanks() {
+  try {
+    const response = await fetch('/api/blood-banks/');
+    allBanks = await response.json();
+    renderBanks(allBanks);
+    renderMap(allBanks);
+  } catch (error) {
+    console.error('Error loading banks:', error);
+  }
+}
+
+async function searchByCity() {
+  const city = document.getElementById('citySearch').value;
+  if (!city) {
+    alert('Please enter a city name');
+    return;
+  }
+  
+  try {
+    const response = await fetch(`/api/blood-banks/by_city/?city=${encodeURIComponent(city)}`);
+    const banks = await response.json();
+    renderBanks(banks);
+    renderMap(banks);
+  } catch (error) {
+    console.error('Error searching:', error);
+  }
+}
+
+async function searchNearby() {
+  if (!navigator.geolocation) {
+    alert('Geolocation is not supported by your browser');
+    return;
+  }
+  
+  navigator.geolocation.getCurrentPosition(
+    async (position) => {
+      const lat = position.coords.latitude;
+      const lon = position.coords.longitude;
+      const radius = document.getElementById('radiusSearch').value;
+      
+      try {
+        const response = await fetch(`/api/blood-banks/nearby/?lat=${lat}&lon=${lon}&radius=${radius}`);
+        const banks = await response.json();
+        renderBanks(banks);
+        renderMap(banks);
+        
+        if (map) {
+          map.setView([lat, lon], 12);
+          L.circleMarker([lat, lon], {
+            radius: 8,
+            fillColor: '#4285F4',
+            color: '#fff',
+            weight: 2,
+            opacity: 1,
+            fillOpacity: 0.8
+          }).bindPopup('Your Location').addTo(map);
+        }
+      } catch (error) {
+        console.error('Error searching nearby:', error);
+      }
+    },
+    (error) => {
+      alert('Error getting your location: ' + error.message);
+    }
+  );
+}
+
+async function showOpenNow() {
+  try {
+    const response = await fetch('/api/blood-banks/open_now/');
+    const banks = await response.json();
+    if (banks.length === 0) {
+      alert('No blood banks are open right now');
+    } else {
+      renderBanks(banks);
+      renderMap(banks);
+    }
+  } catch (error) {
+    console.error('Error:', error);
+  }
+}
+
+function renderBanks(banks) {
+  const container = document.getElementById('banksList');
+  
+  if (banks.length === 0) {
+    container.innerHTML = '<p class="text-muted text-center">No blood banks found</p>';
+    return;
+  }
+  
+  container.innerHTML = banks.map(bank => `
+    <div class="card bank-card mb-3">
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-8">
+            <h5 class="card-title mb-2">🏥 ${bank.name}</h5>
+            <p class="mb-1"><strong>📍</strong> ${bank.address}</p>
+            <p class="mb-1"><strong>📞</strong> ${bank.phone || 'N/A'}</p>
+            <p class="mb-1"><strong>🕐</strong> ${bank.opening_time.substring(0, 5)} - ${bank.closing_time.substring(0, 5)}</p>
+            ${bank.description ? `<p class="text-muted small mt-2">${bank.description}</p>` : ''}
+            <div class="mt-2">
+              <span class="status-badge ${bank.is_open ? 'status-open' : 'status-closed'}">
+                ${bank.is_open ? '✓ Open Now' : '✗ Closed'}
+              </span>
+              ${bank.accepts_walk_in ? '<span class="badge bg-info ms-2">Walk-in Accepted</span>' : ''}
+              ${bank.has_emergency_service ? '<span class="badge bg-danger ms-2">24/7 Emergency</span>' : ''}
+            </div>
+          </div>
+          <div class="col-md-4 text-end">
+            ${bank.website ? `<a href="${bank.website}" target="_blank" class="btn btn-sm btn-outline-danger mb-2 d-block">Visit Website</a>` : ''}
+            ${bank.email ? `<a href="mailto:${bank.email}" class="btn btn-sm btn-outline-danger mb-2 d-block">Email</a>` : ''}
+            <button class="btn btn-sm btn-outline-secondary d-block w-100" onclick="viewOnMap(${bank.latitude}, ${bank.longitude}, '${bank.name}')">View on Map</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderMap(banks) {
+  initMap();
+  clearMarkers();
+  
+  if (!map || banks.length === 0) return;
+  
+  banks.forEach(bank => {
+    const color = bank.is_open ? '#28a745' : '#dc3545';
+    const marker = L.marker([bank.latitude, bank.longitude], {
+      icon: L.divIcon({
+        className: 'custom-marker',
+        html: `<div style="background-color: ${color}; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">🏥</div>`,
+        iconSize: [30, 30],
+        iconAnchor: [15, 15],
+        popupAnchor: [0, -15]
+      })
+    }).bindPopup(`
+      <strong>${bank.name}</strong><br>
+      ${bank.address}<br>
+      ${bank.phone}<br>
+      <small>${bank.opening_time} - ${bank.closing_time}</small>
+    `);
+    
+    marker.addTo(map);
+    markers.push(marker);
+  });
+  
+  // Fit bounds to show all markers
+  if (markers.length > 0) {
+    const group = new L.featureGroup(markers);
+    map.fitBounds(group.getBounds().pad(0.1));
+  }
+}
+
+function viewOnMap(lat, lon, name) {
+  initMap();
+  map.setView([lat, lon], 15);
+}
+
+// Load on page load
+document.addEventListener('DOMContentLoaded', () => {
+  initMap();
+  loadAllBanks();
+});
+</script>
+{% endblock %}

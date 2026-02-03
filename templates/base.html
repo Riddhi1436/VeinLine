@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    {% load static %}
+    {% load auth_filters %}
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{% block title %}VeinLine{% endblock %}</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/veinline.css' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+      .navbar { overflow: visible !important; }
+      .dropdown-menu { z-index: 1050 !important; }
+    </style>
+    {% block head %}{% endblock %}
+  </head>
+  <body class="bg-soft">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-veinline sticky-top shadow-sm">
+      <div class="container">
+        <a class="navbar-brand fw-bold" href="/" style="letter-spacing: -0.5px;">
+          <span style="font-size: 1.8rem;">🩸</span> <span style="font-weight: 800; color: #fff">VeinLine</span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="nav">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item"><a class="nav-link fw-500" href="/" style="color: white;">Home</a></li>
+            <li class="nav-item"><a class="nav-link fw-500" href="/about/" style="color: white;">About</a></li>
+            <!-- New Features Dropdown -->
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle fw-500" href="#" id="featuresDropdown" role="button" data-bs-toggle="dropdown" style="color: white;">
+                ✨ Features
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="featuresDropdown">
+                <li><a class="dropdown-item" href="/leaderboard/">🏆 Donor Leaderboard</a></li>
+                <li><a class="dropdown-item" href="/appointments/">📅 Book Appointment</a></li>
+                <li><a class="dropdown-item" href="/blood-banks/">🏥 Find Blood Banks</a></li>
+                <li><a class="dropdown-item" href="/eligibility/">✅ Eligibility Checker</a></li>
+                {% if user.is_authenticated %}
+                  <li><a class="dropdown-item" href="/timeline/">📊 My Timeline</a></li>
+                {% endif %}
+              </ul>
+            </li>
+            {% if user.is_authenticated %}
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" style="color: white;">
+                  👤 {{ user.username }}
+                </a>
+                <ul class="dropdown-menu" aria-labelledby="userDropdown">
+                  {% if user.is_staff %}
+                    <li><a class="dropdown-item" href="/dashboard/admin/">📊 Admin Dashboard</a></li>
+                  {% else %}
+                    {% if user|safe_profile_role == 'donor' %}
+                      <li><a class="dropdown-item" href="/dashboard/donor/">💉 Donor Dashboard</a></li>
+                    {% endif %}
+                    {% if user|safe_profile_role == 'patient' %}
+                      <li><a class="dropdown-item" href="/dashboard/patient/">🏥 Patient Dashboard</a></li>
+                    {% endif %}
+                  {% endif %}
+                  <li><hr class="dropdown-divider"></li>
+                  <li>
+                    <form method="POST" action="{% url 'logout' %}" style="display: inline;">
+                      {% csrf_token %}
+                      <button type="submit" class="dropdown-item" style="border: none; background: none; cursor: pointer; text-align: left; width: 100%; padding-left: 1rem; padding-right: 1rem; padding-top: 0.5rem; padding-bottom: 0.5rem;">Logout</button>
+                    </form>
+                  </li>
+                </ul>
+              </li>
+            {% else %}
+              <li class="nav-item"><a class="nav-link fw-500" href="{% url 'login' %}" style="color: white;">Login</a></li>
+              <li class="nav-item"><a class="btn btn-light btn-sm ms-2 fw-bold" href="{% url 'register' %}">Register</a></li>
+            {% endif %}
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <main class="container py-4">
+      {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer bg-light text-white">
+      <div class="container">
+        <div class="row g-5 mb-5">
+          <!-- About -->
+          <div class="col-lg-3 col-md-6">
+            <h5 class="fw-bold mb-4">
+              <span style="font-size: 1.5rem;">🩸</span> VeinLine
+            </h5>
+            <p class="text-white mb-4">
+              A modern, privacy-first blood donation platform connecting donors with patients in need.
+            </p>
+            <div class="d-flex gap-2">
+              <a href="#" class="btn btn-sm btn-outline-secondary rounded-circle">f</a>
+              <a href="#" class="btn btn-sm btn-outline-secondary rounded-circle">𝕏</a>
+              <a href="#" class="btn btn-sm btn-outline-secondary rounded-circle">in</a>
+            </div>
+          </div>
+
+          <!-- Quick Links -->
+          <div class="col-lg-2 col-md-6">
+            <h6 class="fw-bold mb-4">Platform</h6>
+            <ul class="list-unstyled space-y-2">
+              <li><a href="/" class="text-white text-decoration-none">Home</a></li>
+              <li><a href="/about/" class="text-white text-decoration-none">About</a></li>
+              <li><a href="/admin/" class="text-white text-decoration-none">Admin</a></li>
+              <li><a href="/api/" class="text-white text-decoration-none">API Docs</a></li>
+            </ul>
+          </div>
+
+          <!-- Features -->
+          <div class="col-lg-2 col-md-6">
+            <h6 class="fw-bold mb-4">Features</h6>
+            <ul class="list-unstyled space-y-2">
+              <li><a href="/eligibility/" class="text-white text-decoration-none">🔒 Privacy First</a></li>
+              <li><a href="/appointments/" class="text-white text-decoration-none">⚡ Instant Matching</a></li>
+              <li><a href="/contact/" class="text-white text-decoration-none">📱 SMS Alerts</a></li>
+              <li><a href="/analytics/" class="text-white text-decoration-none">📊 Analytics</a></li>
+            </ul>
+          </div>
+
+          <!-- Legal -->
+          <div class="col-lg-2 col-md-6">
+            <h6 class="fw-bold mb-4">Legal</h6>
+            <ul class="list-unstyled space-y-2">
+              <li><a href="/privacy/" class="text-white text-decoration-none">Privacy</a></li>
+              <li><a href="/terms/" class="text-white text-decoration-none">Terms</a></li>
+              <li><a href="/contact/" class="text-white text-decoration-none">Contact</a></li>
+              <li><a href="/support/" class="text-white text-decoration-none">Support</a></li>
+            </ul>
+          </div>
+
+          <!-- Newsletter -->
+          <div class="col-lg-3 col-md-6">
+            <h6 class="fw-bold mb-4">Stay Updated</h6>
+            <p class="text-white small mb-3">Get the latest news and updates about VeinLine.</p>
+            <form class="d-flex">
+              <input type="email" class="form-control form-control-sm" placeholder="Your email" style="border-radius: 6px 0 0 6px;">
+              <button type="submit" class="btn btn-danger btn-sm" style="border-radius: 0 6px 6px 0; white-space: nowrap;">Subscribe</button>
+            </form>
+          </div>
+        </div>
+
+        <hr class="my-4 border-secondary opacity-25">
+
+        <!-- Bottom -->
+        <div class="row align-items-center">
+          <div class="col-md-6">
+            <p class="text-white small mb-0">&copy; 2024 VeinLine. All rights reserved. Built with ❤️ for saving lives.</p>
+          </div>
+          <div class="col-md-6 text-md-end">
+            <p class="text-white small mb-0">
+              <a href="/privacy/" class="text-white text-decoration-none">Privacy Policy</a> • 
+              <a href="/terms/" class="text-white text-decoration-none">Terms of Service</a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Generic modal used for Learn More / Access Panel -->
+    <div class="modal fade" id="veinlineModal" tabindex="-1" aria-labelledby="veinlineModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="veinlineModalLabel"></h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body" id="veinlineModalBody"></div>
+          <div class="modal-footer" id="veinlineModalFooter">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {% block scripts %}
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        var modalEl = document.getElementById('veinlineModal');
+        var bsModal = modalEl ? new bootstrap.Modal(modalEl) : null;
+        var modalTitle = document.getElementById('veinlineModalLabel');
+        var modalBody = document.getElementById('veinlineModalBody');
+        var modalFooter = document.getElementById('veinlineModalFooter');
+
+        // Handler for elements which request the modal (data-modal-target)
+        document.querySelectorAll('[data-modal-target]').forEach(function (el) {
+          el.addEventListener('click', function (e) {
+            e.preventDefault();
+            var targetId = el.getAttribute('data-modal-target');
+            var content = document.getElementById(targetId);
+            if (!content) {
+              var href = el.getAttribute('href');
+              if (href && href !== '#') window.location.href = href;
+              return;
+            }
+            // Title precedence: data-modal-title -> first h4 inside content -> element text
+            var title = el.getAttribute('data-modal-title') || (content.querySelector('h4') && content.querySelector('h4').innerText) || el.innerText || '';
+            modalTitle.innerText = title;
+            modalBody.innerHTML = content.innerHTML;
+            if (bsModal) bsModal.show();
+          }, { passive: false });
+        });
+
+        // Fallback: if clicks are being blocked by overlays/handlers, force navigation for feature CTAs
+        var selector = '.feature-card a, .feature-card .btn, .glass a, .gradient-border a, .btn-veinline, .btn-outline-danger';
+        document.querySelectorAll(selector).forEach(function (el) {
+          el.addEventListener('click', function (e) {
+            if (el.hasAttribute('data-modal-target')) return; // modal handled above
+            try {
+              var href = el.getAttribute('href');
+              if (!href || href === '#') return;
+              // small delay to allow native handlers to run; then force navigation if still on same page
+              setTimeout(function () {
+                var targetUrl = new URL(href, window.location.href).href;
+                if (window.location.href === targetUrl || window.location.pathname === new URL(targetUrl).pathname) {
+                  // already at target; do nothing
+                  return;
+                }
+                window.location.href = targetUrl;
+              }, 50);
+            } catch (err) {
+              // fallback: navigate directly
+              var href = el.getAttribute && el.getAttribute('href');
+              if (href && href !== '#') window.location.href = href;
+            }
+          }, { passive: true });
+        });
+      });
+    </script>
+    {% endblock %}
+  </body>
+</html>
+
+

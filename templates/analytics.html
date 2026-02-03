@@ -1,0 +1,247 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics — VeinLine{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <div>
+    <h2 class="h2 mb-1 fw-bold">
+      <span style="font-size: 2rem;">📊</span> Platform Analytics
+    </h2>
+    <div class="text-muted">Real-time insights into blood donation and SOS matching metrics.</div>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-md-3">
+    <div class="card stat-card rounded-4 shadow-sm">
+      <div class="card-body p-4">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <div class="text-muted small fw-semibold">Active Donors</div>
+          <div class="icon-wrapper" style="width: 40px; height: 40px; font-size: 20px;">✅</div>
+        </div>
+        <div class="h3 mb-0 fw-bold text-success">{{ donors_active }}</div>
+        <div class="mt-3 small text-muted">Available for donation</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-3">
+    <div class="card stat-card rounded-4 shadow-sm">
+      <div class="card-body p-4">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <div class="text-muted small fw-semibold">Inactive Donors</div>
+          <div class="icon-wrapper" style="width: 40px; height: 40px; font-size: 20px;">⏸️</div>
+        </div>
+        <div class="h3 mb-0 fw-bold text-muted">{{ donors_inactive }}</div>
+        <div class="mt-3 small text-muted">Temporarily unavailable</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-3">
+    <div class="card stat-card rounded-4 shadow-sm">
+      <div class="card-body p-4">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <div class="text-muted small fw-semibold">Total SOS Requests</div>
+          <div class="icon-wrapper" style="width: 40px; height: 40px; font-size: 20px;">🚨</div>
+        </div>
+        <div class="h3 mb-0 fw-bold text-danger">{{ total_sos_requests }}</div>
+        <div class="mt-3 small text-muted">Emergency requests processed</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-3">
+    <div class="card stat-card rounded-4 shadow-sm">
+      <div class="card-body p-4">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <div class="text-muted small fw-semibold">Response Rate</div>
+          <div class="icon-wrapper" style="width: 40px; height: 40px; font-size: 20px;">📈</div>
+        </div>
+        <div class="h3 mb-0 fw-bold text-info">{{ response_rate }}%</div>
+        <div class="mt-3 small text-muted">Average donor response rate</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-lg-6">
+    <div class="card rounded-4 shadow-sm h-100">
+      <div class="card-body p-4">
+        <div class="d-flex align-items-center mb-4">
+          <div class="icon-wrapper me-3" style="width: 40px; height: 40px; font-size: 20px;">📊</div>
+          <h5 class="fw-bold mb-0">Donors by Blood Group</h5>
+        </div>
+        <canvas id="donorsByGroup"></canvas>
+        <div class="mt-3 text-muted small">Distribution of registered donors across blood groups</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card rounded-4 shadow-sm h-100">
+      <div class="card-body p-4">
+        <div class="d-flex align-items-center mb-4">
+          <div class="icon-wrapper me-3" style="width: 40px; height: 40px; font-size: 20px;">🚨</div>
+          <h5 class="fw-bold mb-0">SOS Requests by Status</h5>
+        </div>
+        <canvas id="sosByStatus"></canvas>
+        <div class="mt-3 text-muted small">Current status of all emergency requests</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card rounded-4 shadow-sm mb-4">
+  <div class="card-body p-4">
+    <div class="d-flex align-items-center mb-4">
+      <div class="icon-wrapper me-3" style="width: 40px; height: 40px; font-size: 20px;">📈</div>
+      <h5 class="fw-bold mb-0">Donor Responses</h5>
+    </div>
+    <canvas id="responsesByChoice"></canvas>
+    <div class="mt-3 text-muted small">Breakdown of donor responses to SOS requests</div>
+  </div>
+</div>
+
+<div class="card rounded-4 shadow-sm">
+  <div class="card-body p-4">
+    <div class="d-flex align-items-center mb-4">
+      <div class="icon-wrapper me-3" style="width: 48px; height: 48px; font-size: 24px;">📦</div>
+      <div>
+        <h4 class="fw-bold mb-0">Blood Bank Inventory Overview</h4>
+        <p class="text-muted small mb-0">Current blood inventory levels across all registered blood banks</p>
+      </div>
+    </div>
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead>
+          <tr>
+            <th>Location</th>
+            <th>Blood Group</th>
+            <th>Units Available</th>
+            <th>Status</th>
+            <th>Last Updated</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in inventory %}
+            <tr>
+              <td><strong>{{ row.city }}</strong></td>
+              <td><span class="badge bg-danger px-3 py-2">{{ row.blood_group }}</span></td>
+              <td class="fw-bold text-veinline">{{ row.units_available }} units</td>
+              <td>
+                {% if row.units_available > 50 %}
+                  <span class="badge bg-success">Adequate</span>
+                {% elif row.units_available > 20 %}
+                  <span class="badge bg-warning text-dark">Low</span>
+                {% else %}
+                  <span class="badge bg-danger">Critical</span>
+                {% endif %}
+              </td>
+              <td class="text-muted small">{{ row.updated_at|date:"M d, Y H:i" }}</td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="5" class="text-center text-muted py-5">
+                <div class="mb-2" style="font-size: 3rem;">📭</div>
+                <div>No inventory data available. Blood banks will be listed here once data is added.</div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+  const donorsByGroup = {{ donors_by_group|safe }};
+  const sosByStatus = {{ sos_by_status|safe }};
+  const responsesByChoice = {{ responses_by_choice|safe }};
+
+  // Donors by Blood Group
+  new Chart(document.getElementById('donorsByGroup'), {
+    type: 'bar',
+    data: {
+      labels: donorsByGroup.map(x => x.blood_group || 'Unknown'),
+      datasets: [{
+        label: 'Number of Donors',
+        data: donorsByGroup.map(x => x.count),
+        backgroundColor: '#b91c1c',
+        borderColor: '#7f1d1d',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: true, position: 'top' }
+      },
+      scales: {
+        y: { beginAtZero: true }
+      }
+    }
+  });
+
+  // SOS by Status
+  const statusColors = {
+    'open': '#ef4444',
+    'fulfilled': '#22c55e',
+    'urgent': '#b91c1c',
+    'closed': '#94a3b8'
+  };
+
+  new Chart(document.getElementById('sosByStatus'), {
+    type: 'doughnut',
+    data: {
+      labels: sosByStatus.map(x => (x.status || 'Unknown').toUpperCase()),
+      datasets: [{
+        label: 'SOS Requests',
+        data: sosByStatus.map(x => x.count),
+        backgroundColor: sosByStatus.map(x => statusColors[x.status?.toLowerCase()] || '#b91c1c'),
+        borderColor: '#ffffff',
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'bottom' }
+      }
+    }
+  });
+
+  // Responses by Choice
+  const responseColors = {
+    'accepted': '#22c55e',
+    'declined': '#ef4444',
+    'pending': '#f59e0b'
+  };
+
+  new Chart(document.getElementById('responsesByChoice'), {
+    type: 'pie',
+    data: {
+      labels: responsesByChoice.map(x => (x.response || 'Unknown').charAt(0).toUpperCase() + (x.response || 'Unknown').slice(1)),
+      datasets: [{
+        label: 'Responses',
+        data: responsesByChoice.map(x => x.count),
+        backgroundColor: responsesByChoice.map(x => responseColors[x.response?.toLowerCase()] || '#b91c1c'),
+        borderColor: '#ffffff',
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'bottom' }
+      }
+    }
+  });
+</script>
+{% endblock %}

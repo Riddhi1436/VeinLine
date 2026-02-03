@@ -1,0 +1,292 @@
+{% extends "base.html" %}
+
+{% block title %}Support - VeinLine{% endblock %}
+
+{% block content %}
+<div class="row py-5">
+  <div class="col-lg-10 mx-auto">
+    <h1 class="mb-4 fw-bold">Support Center</h1>
+    <p class="text-muted mb-5">Find answers to common questions and get help when you need it.</p>
+
+    <!-- Support Categories -->
+    <div class="row g-4 mb-5">
+      <div class="col-md-6 col-lg-3">
+        <div class="card border-0 shadow-sm h-100 support-card" style="cursor: pointer;">
+          <div class="card-body text-center">
+            <div style="font-size: 2.5rem; margin-bottom: 1rem;">💉</div>
+            <h5 class="card-title">Getting Started</h5>
+            <p class="card-text text-muted small">Learn how to register and get started as a donor or patient.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-3">
+        <div class="card border-0 shadow-sm h-100 support-card" style="cursor: pointer;">
+          <div class="card-body text-center">
+            <div style="font-size: 2.5rem; margin-bottom: 1rem;">🔒</div>
+            <h5 class="card-title">Privacy & Security</h5>
+            <p class="card-text text-muted small">Information about how we protect your personal data.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-3">
+        <div class="card border-0 shadow-sm h-100 support-card" style="cursor: pointer;">
+          <div class="card-body text-center">
+            <div style="font-size: 2.5rem; margin-bottom: 1rem;">🩸</div>
+            <h5 class="card-title">Blood Donation</h5>
+            <p class="card-text text-muted small">FAQs and guidelines about blood donation eligibility.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-3">
+        <div class="card border-0 shadow-sm h-100 support-card" style="cursor: pointer;">
+          <div class="card-body text-center">
+            <div style="font-size: 2.5rem; margin-bottom: 1rem;">🔧</div>
+            <h5 class="card-title">Technical Help</h5>
+            <p class="card-text text-muted small">Troubleshooting and technical issues with the platform.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Knowledge Base Articles -->
+    <h2 class="mb-4 mt-5 fw-bold">Knowledge Base</h2>
+    
+    <div class="accordion" id="supportAccordion">
+      <!-- Getting Started -->
+      <div class="accordion-item">
+        <h2 class="accordion-header">
+          <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#gs1">
+            💉 How do I create an account on VeinLine?
+          </button>
+        </h2>
+        <div id="gs1" class="accordion-collapse collapse show" data-bs-parent="#supportAccordion">
+          <div class="accordion-body">
+            <ol>
+              <li>Visit the VeinLine homepage</li>
+              <li>Click on the "Register" button in the top-right corner</li>
+              <li>Choose your role (Donor or Patient)</li>
+              <li>Fill in your personal information accurately</li>
+              <li>Create a secure password (minimum 8 characters)</li>
+              <li>Submit the form and verify your email</li>
+            </ol>
+            <p><strong>Note:</strong> Providing accurate information is crucial for safe blood matching.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <h2 class="accordion-header">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#gs2">
+            💉 What's the difference between Donor and Patient accounts?
+          </button>
+        </h2>
+        <div id="gs2" class="accordion-collapse collapse" data-bs-parent="#supportAccordion">
+          <div class="accordion-body">
+            <div class="row">
+              <div class="col-md-6">
+                <h6>Donor Account:</h6>
+                <ul class="small">
+                  <li>Register your blood type and health information</li>
+                  <li>Find blood banks near you</li>
+                  <li>Book donation appointments</li>
+                  <li>Track your donation history</li>
+                  <li>Earn badges and join leaderboards</li>
+                </ul>
+              </div>
+              <div class="col-md-6">
+                <h6>Patient Account:</h6>
+                <ul class="small">
+                  <li>Request blood for medical needs</li>
+                  <li>Get matched with compatible donors</li>
+                  <li>Receive notifications when blood is available</li>
+                  <li>Track your blood requirements</li>
+                  <li>Communicate with donors and blood banks</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Privacy & Security -->
+      <div class="accordion-item">
+        <h2 class="accordion-header">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#ps1">
+            🔒 How is my personal information protected?
+          </button>
+        </h2>
+        <div id="ps1" class="accordion-collapse collapse" data-bs-parent="#supportAccordion">
+          <div class="accordion-body">
+            <p>VeinLine uses industry-standard security measures to protect your data:</p>
+            <ul class="small">
+              <li><strong>Encryption:</strong> All data is encrypted in transit and at rest</li>
+              <li><strong>Access Control:</strong> Only authorized personnel can access your information</li>
+              <li><strong>Regular Audits:</strong> We conduct security audits regularly</li>
+              <li><strong>Compliance:</strong> We comply with healthcare data protection regulations</li>
+              <li><strong>Secure Servers:</strong> Data is stored on secure, backed-up servers</li>
+            </ul>
+            <p class="mt-3"><strong>For more details, see our <a href="/privacy/" class="text-danger">Privacy Policy</a></strong></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <h2 class="accordion-header">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#ps2">
+            🔒 Can I delete my account?
+          </button>
+        </h2>
+        <div id="ps2" class="accordion-collapse collapse" data-bs-parent="#supportAccordion">
+          <div class="accordion-body">
+            <p>Yes, you can request account deletion. Here's how:</p>
+            <ol class="small">
+              <li>Log in to your account</li>
+              <li>Go to Account Settings</li>
+              <li>Select "Delete Account"</li>
+              <li>Confirm your identity</li>
+              <li>Your account and associated data will be deleted within 30 days</li>
+            </ol>
+            <p class="mt-3"><strong>Note:</strong> Some data may be retained for legal or medical record-keeping purposes.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Blood Donation -->
+      <div class="accordion-item">
+        <h2 class="accordion-header">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#bd1">
+            🩸 Am I eligible to donate blood?
+          </button>
+        </h2>
+        <div id="bd1" class="accordion-collapse collapse" data-bs-parent="#supportAccordion">
+          <div class="accordion-body">
+            <p>General eligibility requirements include:</p>
+            <ul class="small">
+              <li>Age: 18-65 years old</li>
+              <li>Weight: At least 50 kg (110 lbs)</li>
+              <li>Hemoglobin: Minimum levels (women: 12.5 g/dL, men: 13.5 g/dL)</li>
+              <li>Health: No serious medical conditions</li>
+              <li>No recent infections or vaccinations</li>
+              <li>No blood-borne disease risks</li>
+            </ul>
+            <p class="mt-3"><strong>Use our <a href="/eligibility/" class="text-danger">Eligibility Checker</a> for a preliminary assessment.</strong></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <h2 class="accordion-header">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#bd2">
+            🩸 How often can I donate blood?
+          </button>
+        </h2>
+        <div id="bd2" class="accordion-collapse collapse" data-bs-parent="#supportAccordion">
+          <div class="accordion-body">
+            <table class="table table-sm table-bordered">
+              <thead>
+                <tr>
+                  <th>Donation Type</th>
+                  <th>Frequency</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Whole Blood</td>
+                  <td>Every 56 days (every 8 weeks)</td>
+                </tr>
+                <tr>
+                  <td>Plasma</td>
+                  <td>Up to 2 times per week</td>
+                </tr>
+                <tr>
+                  <td>Platelets</td>
+                  <td>Up to 24 times per year</td>
+                </tr>
+              </tbody>
+            </table>
+            <p class="small text-muted"><strong>Note:</strong> These are standard guidelines; local regulations may vary.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Technical Help -->
+      <div class="accordion-item">
+        <h2 class="accordion-header">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#th1">
+            🔧 I can't log in to my account. What should I do?
+          </button>
+        </h2>
+        <div id="th1" class="accordion-collapse collapse" data-bs-parent="#supportAccordion">
+          <div class="accordion-body">
+            <ol class="small">
+              <li><strong>Check your credentials:</strong> Ensure you're using the correct username/email and password</li>
+              <li><strong>Reset password:</strong> Click "Forgot Password" on the login page</li>
+              <li><strong>Check email:</strong> Look for the password reset link in your email (check spam folder)</li>
+              <li><strong>Clear cache:</strong> Try clearing your browser cache and cookies</li>
+              <li><strong>Try another browser:</strong> Test with a different browser</li>
+              <li><strong>Contact support:</strong> If the issue persists, <a href="/contact/" class="text-danger">contact us</a></li>
+            </ol>
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <h2 class="accordion-header">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#th2">
+            🔧 The website is slow or not loading properly. What's wrong?
+          </button>
+        </h2>
+        <div id="th2" class="accordion-collapse collapse" data-bs-parent="#supportAccordion">
+          <div class="accordion-body">
+            <p>Try these troubleshooting steps:</p>
+            <ol class="small">
+              <li>Refresh the page (Ctrl+R or Cmd+R)</li>
+              <li>Clear your browser cache and cookies</li>
+              <li>Disable browser extensions temporarily</li>
+              <li>Try a different browser</li>
+              <li>Check your internet connection</li>
+              <li>Try on a different device</li>
+              <li>If problems continue, <a href="/contact/" class="text-danger">report the issue to us</a></li>
+            </ol>
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <h2 class="accordion-header">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#th3">
+            🔧 How do I update my profile information?
+          </button>
+        </h2>
+        <div id="th3" class="accordion-collapse collapse" data-bs-parent="#supportAccordion">
+          <div class="accordion-body">
+            <ol class="small">
+              <li>Log in to your account</li>
+              <li>Click on your profile icon in the top-right corner</li>
+              <li>Select "Profile Settings"</li>
+              <li>Edit the information you want to update</li>
+              <li>Click "Save Changes"</li>
+            </ol>
+            <p class="mt-2 text-muted small"><strong>Important:</strong> Some critical medical information may require verification or cannot be changed directly. Contact support for assistance.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Still Need Help? -->
+    <div class="row mt-5">
+      <div class="col-lg-8 mx-auto">
+        <div class="alert alert-primary border-0" style="background-color: #f0f8ff;">
+          <h5 class="mb-3">❓ Didn't find your answer?</h5>
+          <p class="mb-3">If you couldn't find what you're looking for, our support team is ready to help.</p>
+          <a href="/contact/" class="btn btn-danger">Contact Support</a>
+          <a href="mailto:support@veinline.com" class="btn btn-outline-danger ms-2">Email Us</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
